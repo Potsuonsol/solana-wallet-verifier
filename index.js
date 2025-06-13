@@ -25,7 +25,11 @@ app.post("/verify", (req, res) => {
             publicKeyBytes
         );
 
-        res.json({ verified: isValid });
+        if (isValid) {
+            return res.json({ success: true, userId: publicKey });
+        } else {
+            return res.status(401).json({ success: false, error: "Invalid signature" });
+        }
     } catch (e) {
         res.status(500).json({ error: "Verification failed", details: e.message });
     }
