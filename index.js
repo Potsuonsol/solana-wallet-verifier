@@ -34,6 +34,25 @@ app.post("/verify", (req, res) => {
         res.status(500).json({ error: "Verification failed", details: e.message });
     }
 });
+const savedData = {}; // temporary in-memory database
+
+app.post("/save", (req, res) => {
+    const { userId, items } = req.body;
+    if (!userId || !items) {
+        return res.status(400).json({ error: "Missing userId or items" });
+    }
+    savedData[userId] = items;
+    res.json({ success: true });
+});
+
+app.get("/load", (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) {
+        return res.status(400).json({ error: "Missing userId" });
+    }
+    const items = savedData[userId] || [];
+    res.json({ success: true, items });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Wallet verifier running on port ${PORT}`));
