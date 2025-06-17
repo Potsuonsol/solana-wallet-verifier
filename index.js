@@ -1,24 +1,28 @@
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 const bs58 = require("bs58");
 const nacl = require("tweetnacl");
-
-// MongoDB setup
-const client = new MongoClient(process.env.MONGODB_URI);
-let db, users;
-
-client.connect().then(() => {
-  db = client.db("potsu_metaverse");
-  users = db.collection("verified_users");
-  console.log("✅ Connected to MongoDB");
-});
+const { MongoClient } = require("mongodb");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// MongoDB setup
+const client = new MongoClient(process.env.MONGODB_URI);
+let db, users;
+
+// Connect to MongoDB
+client.connect().then(() => {
+  db = client.db("potsu_metaverse");
+  users = db.collection("verified_users");
+  console.log("✅ Connected to MongoDB");
+}).catch(err => {
+  console.error("❌ Failed to connect to MongoDB:", err);
+});
+
+// Verify signature and save user info
 app.post("/verify", async (req, res) => {
   const { publicKey, message, signature, data } = req.body;
 
@@ -44,16 +48,16 @@ app.post("/verify", async (req, res) => {
 
     console.log("✅ Signature verified for:", publicKey);
 
-    // Store flexible data (like items/base/etc) from Unity
-    const result = await users.updateOne(
+    // Store flexible data (items, base, etc.) from Unity
+    await users.updateOne(
       { publicKey },
       {
         $set: {
           publicKey,
           message,
           lastVerified: new Date(),
-          ...(data || {}) // Flexible data!
-        },
+          ...(data || {})
+        }
       },
       { upsert: true }
     );
@@ -65,7 +69,7 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-// Save endpoint
+// Save items
 app.post("/save", async (req, res) => {
   const { publicKey, items } = req.body;
 
@@ -74,13 +78,13 @@ app.post("/save", async (req, res) => {
   }
 
   try {
-    const result = await users.updateOne(
+    await users.updateOne(
       { publicKey },
       {
         $set: {
           items,
-          lastUpdated: new Date(),
-        },
+          lastUpdated: new Date()
+        }
       },
       { upsert: true }
     );
@@ -91,7 +95,7 @@ app.post("/save", async (req, res) => {
   }
 });
 
-// Load endpoint
+// Load items
 app.post("/load", async (req, res) => {
   const { publicKey } = req.body;
 
@@ -104,14 +108,17 @@ app.post("/load", async (req, res) => {
     if (!user) {
       return res.json({ items: [] }); // No data yet
     }
-    res.json({ publicKey: user.publicKey, items: user.items || [] });
+    res.json({
+      publicKey: user.publicKey,
+      items: user.items || []
+    });
   } catch (e) {
     console.error("❌ Load error:", e);
     res.status(500).json({ error: "Load failed", details: e.message });
   }
 });
 
-
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`✅ Wallet verifier running on port ${PORT}`)
