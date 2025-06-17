@@ -1,4 +1,4 @@
-require("dotenv").config();More actions
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bs58 = require("bs58");
