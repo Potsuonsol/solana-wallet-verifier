@@ -65,6 +65,53 @@ app.post("/verify", async (req, res) => {
   }
 });
 
+// Save endpoint
+app.post("/save", async (req, res) => {
+  const { publicKey, items } = req.body;
+
+  if (!publicKey || !items) {
+    return res.status(400).json({ error: "Missing publicKey or items" });
+  }
+
+  try {
+    const result = await users.updateOne(
+      { publicKey },
+      {
+        $set: {
+          items,
+          lastUpdated: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    console.error("❌ Save error:", e);
+    res.status(500).json({ error: "Save failed", details: e.message });
+  }
+});
+
+// Load endpoint
+app.post("/load", async (req, res) => {
+  const { publicKey } = req.body;
+
+  if (!publicKey) {
+    return res.status(400).json({ error: "Missing publicKey" });
+  }
+
+  try {
+    const user = await users.findOne({ publicKey });
+    if (!user) {
+      return res.json({ items: [] }); // No data yet
+    }
+    res.json({ publicKey: user.publicKey, items: user.items || [] });
+  } catch (e) {
+    console.error("❌ Load error:", e);
+    res.status(500).json({ error: "Load failed", details: e.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`✅ Wallet verifier running on port ${PORT}`)
