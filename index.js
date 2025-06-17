@@ -5,12 +5,12 @@ const cors = require("cors");
 const bs58 = require("bs58");
 const nacl = require("tweetnacl");
 
-// MongoDB connection
+// MongoDB setup
 const client = new MongoClient(process.env.MONGODB_URI);
 let db, users;
 
 client.connect().then(() => {
-  db = client.db("potsu_metaverse"); // You can name this whatever you want
+  db = client.db("potsu_metaverse");
   users = db.collection("verified_users");
   console.log("✅ Connected to MongoDB");
 });
@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/verify", async (req, res) => {
-  const { publicKey, message, signature } = req.body;
+  const { publicKey, message, signature, data } = req.body;
 
   if (!publicKey || !message || !signature) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -44,18 +44,15 @@ app.post("/verify", async (req, res) => {
 
     console.log("✅ Signature verified for:", publicKey);
 
-    // Create or update the user in MongoDB
+    // Store flexible data (like items/base/etc) from Unity
     const result = await users.updateOne(
       { publicKey },
       {
-        $setOnInsert: {
-          items: [],
-          base: {},
-        },
         $set: {
           publicKey,
-          lastVerified: new Date(),
           message,
+          lastVerified: new Date(),
+          ...(data || {}) // Flexible data!
         },
       },
       { upsert: true }
