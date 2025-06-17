@@ -15,7 +15,7 @@ let db, users;
 
 // Connect to MongoDB
 client.connect().then(() => {
-  db = client.db("potsu_metaverse");
+  db = client.db("Potsu");
   users = db.collection("verified_users");
   console.log("✅ Connected to MongoDB");
 }).catch(err => {
