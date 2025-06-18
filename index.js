@@ -15,9 +15,6 @@ const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
   tls: true,
   tlsAllowInvalidCertificates: false,
-  // 🔒 Force TLS version 1.2+
-  minVersion: 'TLSv1.2',
-  maxVersion: 'TLSv1.3',
 });
 
 async function run() {
