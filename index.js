@@ -8,35 +8,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 //const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse";
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const { MongoClient } = require('mongodb');
+
+const uri = process.env.MONGODB_URI;
+
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-     // These two help force TLS 1.2 if Render's system tries to use lower
-    tls: true,
+  tls: true,
   tlsAllowInvalidCertificates: false,
-  tlsInsecure: false,
+  // 🔒 Force TLS version 1.2+
   minVersion: 'TLSv1.2',
-  maxVersion: 'TLSv1.3'
-  }
+  maxVersion: 'TLSv1.3',
 });
+
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
+    console.log('✅ Connected to MongoDB');
+  } catch (err) {
+    console.error('❌ Failed to connect to MongoDB:', err);
   }
 }
-run().catch(console.dir);
+
+run();
 
 
 // Verify signature and save user info
