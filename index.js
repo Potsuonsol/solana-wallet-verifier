@@ -16,6 +16,12 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
+     // These two help force TLS 1.2 if Render's system tries to use lower
+    tls: true,
+  tlsAllowInvalidCertificates: false,
+  tlsInsecure: false,
+  minVersion: 'TLSv1.2',
+  maxVersion: 'TLSv1.3'
   }
 });
 async function run() {
