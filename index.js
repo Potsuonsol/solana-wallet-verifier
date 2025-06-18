@@ -15,8 +15,6 @@ let db, users;
 
 // Connect to MongoDB
 client.connect().then(() => {
-  db = client.db("Potsu");
-  
   console.log("✅ Connected to MongoDB");
 }).catch(err => {
   console.error("❌ Failed to connect to MongoDB:", err);
