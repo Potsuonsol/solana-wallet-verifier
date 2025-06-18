@@ -11,7 +11,7 @@ app.use(express.json());
 
 // MongoDB setup
 const client = new MongoClient(process.env.MONGODB_URI);
-console.log("Database is" + client);
+console.log("Database is" + process.env.MONGODB_URI);
 let db, users;
 
 // Connect to MongoDB
