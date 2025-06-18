@@ -1,57 +1,27 @@
-require("dotenv").config();
-
-// 2. Import necessary modules
+require("dotenv").config(); 
 const express = require("express");
 const cors = require("cors");
-const bs58 = require("bs58"); // Will be used for Solana data
-const nacl = require("tweetnacl"); // Will be used for signature verification
-const { MongoClient, ServerApiVersion } = require("mongodb"); // Import ServerApiVersion for new clients
+const bs58 = require("bs58");
+const nacl = require("tweetnacl");
+const { MongoClient } = require("mongodb");
 
-// 3. Initialize Express app
 const app = express();
-app.use(cors()); // Enable CORS for all origins (adjust for production)
-app.use(express.json()); // Enable parsing of JSON request bodies
+app.use(cors());
+app.use(express.json());
 
-// 4. MongoDB setup
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-  console.error("❌ MONGODB_URI is not defined in the .env file!");
-  process.exit(1); // Exit the process if essential config is missing
-}
+// MongoDB setup
+const client = new MongoClient(process.env.MONGODB_URI);
+let db, users;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(MONGODB_URI, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+// Connect to MongoDB
+client.connect().then(() => {
+  db = client.db("potsu_metaverse");
+  db = client.db("Potsu");
+  users = db.collection("verified_users");
+  console.log("✅ Connected to MongoDB");
+}).catch(err => {
+  console.error("❌ Failed to connect to MongoDB:", err);
 });
-
-let db; // Use a more descriptive name for the collection variable
-
-// 5. Connect to MongoDB and set up the collection
-async function connectToMongo() {
-  try {
-    await client.connect();
-    db = client.db("Potsu"); // Connect to your specific database 
-    console.log("✅ Connected to MongoDB");
-
-    // Optional: Create an index if needed for better performance, e.g., on publicKey
-    // This is good practice if you'll be querying by publicKey often
-    // await usersCollection.createIndex({ publicKey: 1 }, { unique: true });
-    // console.log("✅ Index on publicKey created.");
-
-  } catch (err) {
-    console.error("❌ Failed to connect to MongoDB:", err);
-    // In a production app, you might want more sophisticated error handling
-    // like retrying connection or logging to a monitoring system.
-    process.exit(1); // Exit if database connection fails at startup
-  }
-}
-
-// Call the connection function
-connectToMongo();
 
 // Verify signature and save user info
 app.post("/verify", async (req, res) => {
