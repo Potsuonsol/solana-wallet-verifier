@@ -18,7 +18,7 @@ let db, users;
 
 const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
 
-
+console.log('Running with Node version:', process.version);
 client.connect()
   .then(() => {
     console.log('✅ Connected to MongoDB');
