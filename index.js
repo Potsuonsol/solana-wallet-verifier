@@ -8,12 +8,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Connect to MongoDB
+const { MongoClient } = require('mongodb');
 // MongoDB setup
 const client = new MongoClient(process.env.MONGODB_URI);
 let db, users;
 
-// Connect to MongoDB
-const { MongoClient } = require('mongodb');
+
 
 const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
 
