@@ -11,12 +11,13 @@ app.use(express.json());
 
 // MongoDB setup
 const client = new MongoClient(process.env.MONGODB_URI);
+console.log("Database is" + client);
 let db, users;
 
 // Connect to MongoDB
 client.connect().then(() => { 
   db = client.db("Potsu");
-  console.log("Database is" + db);
+  
   users = db.collection("verified_users");
   console.log("✅ Connected to MongoDB");
 }).catch(err => {
