@@ -17,11 +17,6 @@ const { MongoClient } = require('mongodb');
 
 const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
 
-const client = new MongoClient(uri, {
-  tls: true,
-  tlsAllowInvalidCertificates: false,
-  useUnifiedTopology: true
-});
 
 client.connect()
   .then(() => {
