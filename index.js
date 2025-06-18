@@ -2,8 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bs58 = require("bs58");
-const nacl = require("tweetnacl");
-const { MongoClient } = require("mongodb");
+const nacl = require("tweetnacl"); 
 
 const app = express();
 app.use(cors());
@@ -14,14 +13,24 @@ const client = new MongoClient(process.env.MONGODB_URI);
 let db, users;
 
 // Connect to MongoDB
-client.connect().then(() => { 
-  db = client.db("Potsu");
-  
-  users = db.collection("verified_users");
-  console.log("✅ Connected to MongoDB");
-}).catch(err => {
-  console.error("❌ Failed to connect to MongoDB:", err);
+const { MongoClient } = require('mongodb');
+
+const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
+
+const client = new MongoClient(uri, {
+  tls: true,
+  tlsAllowInvalidCertificates: false,
+  useUnifiedTopology: true
 });
+
+client.connect()
+  .then(() => {
+    console.log('✅ Connected to MongoDB');
+  })
+  .catch((err) => {
+    console.error('❌ Failed to connect to MongoDB:', err);
+  });
+
 
 // Verify signature and save user info
 app.post("/verify", async (req, res) => {
