@@ -1,35 +1,23 @@
-require("dotenv").config(); 
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bs58 = require("bs58");
-const nacl = require("tweetnacl"); 
+const nacl = require("tweetnacl");
+const admin = require("firebase-admin");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-//const uri = 'mongodb+srv://potsuonsolana:eRiDS8E5YlNYXDIl@potsumetaverse.ggqxjlx.mongodb.net/?retryWrites=true&w=majority&appName=PotsuMetaverse';
-const { MongoClient } = require('mongodb');
 
-const uri = process.env.MONGODB_URI;
-
-const client = new MongoClient(uri, {
-  tls: true,
-  tlsAllowInvalidCertificates: false,
+// ✅ Initialize Firebase Admin with service account
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS); // Render secret
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
 });
+const db = admin.firestore();
+const users = db.collection("users");
 
-async function run() {
-  try {
-    await client.connect();
-    console.log('✅ Connected to MongoDB');
-  } catch (err) {
-    console.error('❌ Failed to connect to MongoDB:', err);
-  }
-}
-
-run();
-
-
-// Verify signature and save user info
+// ✅ Verify signature and save user info
 app.post("/verify", async (req, res) => {
   const { publicKey, message, signature, data } = req.body;
 
@@ -55,18 +43,14 @@ app.post("/verify", async (req, res) => {
 
     console.log("✅ Signature verified for:", publicKey);
 
-    // Store flexible data (items, base, etc.) from Unity
-    await users.updateOne(
-      { publicKey },
+    await users.doc(publicKey).set(
       {
-        $set: {
-          publicKey,
-          message,
-          lastVerified: new Date(),
-          ...(data || {})
-        }
+        publicKey,
+        message,
+        lastVerified: new Date().toISOString(),
+        ...(data || {})
       },
-      { upsert: true }
+      { merge: true }
     );
 
     res.json({ verified: true });
@@ -76,7 +60,7 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-// Save items
+// ✅ Save items
 app.post("/save", async (req, res) => {
   const { publicKey, items } = req.body;
 
@@ -85,15 +69,12 @@ app.post("/save", async (req, res) => {
   }
 
   try {
-    await users.updateOne(
-      { publicKey },
+    await users.doc(publicKey).set(
       {
-        $set: {
-          items,
-          lastUpdated: new Date()
-        }
+        items,
+        lastUpdated: new Date().toISOString()
       },
-      { upsert: true }
+      { merge: true }
     );
     res.json({ success: true });
   } catch (e) {
@@ -102,7 +83,7 @@ app.post("/save", async (req, res) => {
   }
 });
 
-// Load items
+// ✅ Load items
 app.post("/load", async (req, res) => {
   const { publicKey } = req.body;
 
@@ -111,10 +92,11 @@ app.post("/load", async (req, res) => {
   }
 
   try {
-    const user = await users.findOne({ publicKey });
-    if (!user) {
-      return res.json({ items: [] }); // No data yet
+    const doc = await users.doc(publicKey).get();
+    if (!doc.exists) {
+      return res.json({ items: [] });
     }
+    const user = doc.data();
     res.json({
       publicKey: user.publicKey,
       items: user.items || []
@@ -125,7 +107,7 @@ app.post("/load", async (req, res) => {
   }
 });
 
-// Start the server
+// ✅ Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () =>
   console.log(`✅ Wallet verifier running on port ${PORT}`)
