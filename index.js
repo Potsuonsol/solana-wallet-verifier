@@ -9,13 +9,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Initialize Firebase Admin with service account
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS); // Render secret
+const admin = require("firebase-admin");
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount)
 });
+
 const db = admin.firestore();
 const users = db.collection("users");
+
 
 // ✅ Verify signature and save user info
 app.post("/verify", async (req, res) => {
