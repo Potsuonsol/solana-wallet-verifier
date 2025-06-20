@@ -8,8 +8,7 @@ const admin = require("firebase-admin");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-const admin = require("firebase-admin");
+ 
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 
