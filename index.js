@@ -109,6 +109,12 @@ app.post("/load", async (req, res) => {
     res.status(500).json({ error: "Load failed", details: e.message });
   }
 });
+// Node.js Express route
+app.get("/users", async (req, res) => {
+    const usersSnapshot = await db.collection("users").get();
+    const addresses = usersSnapshot.docs.map(doc => doc.id); // assuming publicKey is doc ID
+    res.json(addresses);
+});
 
 // ✅ Start the server
 const PORT = process.env.PORT || 3000;
