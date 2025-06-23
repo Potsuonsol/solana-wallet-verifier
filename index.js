@@ -65,26 +65,28 @@ app.post("/verify", async (req, res) => {
 
 // ✅ Save items
 app.post("/save", async (req, res) => {
-  const { publicKey, items } = req.body;
+  const { publicKey, ...data } = req.body;
 
-  if (!publicKey || !items) {
-    return res.status(400).json({ error: "Missing publicKey or items" });
+  if (!publicKey) {
+    return res.status(400).json({ error: "Missing publicKey" });
   }
 
   try {
     await users.doc(publicKey).set(
       {
-        items,
+        ...data,
         lastUpdated: new Date().toISOString()
       },
       { merge: true }
     );
+
     res.json({ success: true });
   } catch (e) {
     console.error("❌ Save error:", e);
     res.status(500).json({ error: "Save failed", details: e.message });
   }
 });
+
 
 // ✅ Load items
 app.post("/load", async (req, res) => {
@@ -96,19 +98,18 @@ app.post("/load", async (req, res) => {
 
   try {
     const doc = await users.doc(publicKey).get();
+
     if (!doc.exists) {
-      return res.json({ items: [] });
+      return res.json({}); // Return empty payload
     }
-    const user = doc.data();
-    res.json({
-      publicKey: user.publicKey,
-      items: user.items || []
-    });
+
+    res.json(doc.data()); // Return all saved fields
   } catch (e) {
     console.error("❌ Load error:", e);
     res.status(500).json({ error: "Load failed", details: e.message });
   }
 });
+
 // Node.js Express route
 app.get("/users", async (req, res) => {
     const usersSnapshot = await db.collection("users").get();
