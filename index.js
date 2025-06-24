@@ -87,6 +87,41 @@ app.post("/save", async (req, res) => {
   }
 });
 
+app.post("/save-item", async (req, res) => {
+  const { publicKey, item } = req.body;
+
+  if (!publicKey || !item || !item.objectId) {
+    return res.status(400).json({ error: "Missing publicKey or item.objectId" });
+  }
+
+  try {
+    const userRef = users.doc(publicKey);
+    const doc = await userRef.get();
+
+    let updatedItems = [];
+
+    if (doc.exists) {
+      const data = doc.data();
+      updatedItems = data.items || [];
+
+      const existingIndex = updatedItems.findIndex(i => i.objectId === item.objectId);
+      if (existingIndex !== -1) {
+        updatedItems[existingIndex] = item;
+      } else {
+        updatedItems.push(item);
+      }
+    } else {
+      updatedItems.push(item);
+    }
+
+    await userRef.set({ items: updatedItems }, { merge: true });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("❌ Save item error:", e);
+    res.status(500).json({ error: "Save item failed", details: e.message });
+  }
+});
 
 // ✅ Load items
 app.post("/load", async (req, res) => {
@@ -109,6 +144,36 @@ app.post("/load", async (req, res) => {
     res.status(500).json({ error: "Load failed", details: e.message });
   }
 });
+
+app.post("/delete", async (req, res) => {
+  const { publicKey, objectId } = req.body;
+
+  if (!publicKey || !objectId) {
+    return res.status(400).json({ error: "Missing publicKey or objectId" });
+  }
+
+  try {
+    const userRef = users.doc(publicKey);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userData = doc.data();
+    const existingItems = userData.items || [];
+
+    const updatedItems = existingItems.filter(item => item.objectId !== objectId);
+
+    await userRef.update({ items: updatedItems });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("❌ Delete item error:", e);
+    res.status(500).json({ error: "Delete item failed", details: e.message });
+  }
+});
+
 
 // Node.js Express route
 app.get("/users", async (req, res) => {
